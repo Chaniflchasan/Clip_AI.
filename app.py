@@ -4,12 +4,12 @@ import subprocess
 
 # --- JALUR BYPASS FFmpeg ---
 # Kode ini memaksa Python mengenali folder di D:/ffmpeg/bin milikmu
-ffmpeg_bin_path = r'D:\ffmpeg\bin'
-os.environ["PATH"] += os.pathsep + ffmpeg_bin_path
+# ffmpeg_bin_path = r'D:\ffmpeg\bin'
+# os.environ["PATH"] += os.pathsep + ffmpeg_bin_path
 
 # Tambahan khusus untuk library MoviePy agar tidak bingung
 import moviepy.config as mp_config
-mp_config.FFMPEG_BINARY = os.path.join(ffmpeg_bin_path, "ffmpeg.exe")
+# mp_config.FFMPEG_BINARY = os.path.join(ffmpeg_bin_path, "ffmpeg.exe")
 
 import streamlit as st
 import whisper
@@ -99,9 +99,17 @@ with col_editor:
         show_controls=True,
         show_mini_map=True,
     )
+    # Update session state to persist changes
+    st.session_state.nodes = flow_state.nodes
+    st.session_state.edges = flow_state.edges
 
 with col_properties:
     st.subheader("Node Properties")
+
+    # Initialize defaults to prevent NameError
+    start_sec, end_sec = 0, 10
+    text_content, text_color, bg_color = "TIPS HARI INI", "#FFFFFF", "#FF0000"
+    logo_upload, logo_size, logo_pos = None, 100, "Top-Right"
 
     # Input Node Properties
     if any(node.id == 'input' for node in flow_state.nodes):
@@ -160,6 +168,7 @@ with col_render:
                 # Reframe to portrait
                 w, h = clip.size
                 target_w = h * 9/16
+                target_w = int(h * 9/16)
                 clip = clip.crop(x_center=w/2, width=target_w)
 
                 layers = [clip]
@@ -171,8 +180,8 @@ with col_render:
                                        font='Arial-Bold', method='caption', size=(target_w, 100))
                         txt = txt.set_pos(('center', 'top')).set_duration(clip.duration)
                         layers.append(txt)
-                    except:
-                        st.warning("Text rendering failed. Ensure ImageMagick is installed.")
+                    except Exception as e:
+                        st.warning(f"Text rendering failed: {e}. Ensure ImageMagick is installed.")
 
                 # Add logo if connected
                 if any(edge.target == 'logo' for edge in flow_state.edges) and logo_upload:
